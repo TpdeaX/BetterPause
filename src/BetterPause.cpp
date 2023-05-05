@@ -235,7 +235,7 @@ bool BetterPause::init(gd::PauseLayer* pauseLayer, bool isEditor) {
 	this->m_pQuickSettingsLabel->setPosition({ 165.f, 178.f });
 	this->addChild(this->m_pQuickSettingsLabel);
 
-	this->m_pVolumenSettingsLabel = cocos2d::CCLabelBMFont::create("Volumen Settings:", "bigFont.fnt");
+	this->m_pVolumenSettingsLabel = cocos2d::CCLabelBMFont::create("Volume Settings:", "bigFont.fnt");
 	this->m_pVolumenSettingsLabel->setScale(0.5f);
 	this->m_pVolumenSettingsLabel->setPosition({ this->m_pSliderMusic->getPositionX() + 5.f, this->m_pSliderMusic->getPositionY() + 60.f });
 	this->addChild(this->m_pVolumenSettingsLabel);
@@ -497,7 +497,7 @@ void BetterPause::onAutoRetryA(cocos2d::CCObject* pSender) {
 }
 
 void BetterPause::onAutoCheckpointsA(cocos2d::CCObject* pSender) {
-	this->pauseLayer->onAutoRetry(pSender);
+	this->pauseLayer->onAutoCheckpoints(pSender);
 }
 
 void BetterPause::updatePercentageObjects() {
