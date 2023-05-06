@@ -123,7 +123,7 @@ bool BetterPause::init(gd::PauseLayer* pauseLayer, bool isEditor) {
 	m_pSliderMusic->setAnchorPoint({ 0.f, 0.5f });
 	m_pSliderMusic->setPosition({ Utils::winSize().width - 155.f, Utils::winSize().height - 90.f });
 	this->addChild(m_pSliderMusic);
-	
+
 	m_pSliderSFX = gd::Slider::create(this, (cocos2d::SEL_MenuHandler)&BetterPause::sfxSliderChanged, 1.f);
 	m_pSliderSFX->setValue(Utils::shareFMOD()->getSFXVolume());
 	m_pSliderSFX->updateBar();
@@ -153,15 +153,16 @@ bool BetterPause::init(gd::PauseLayer* pauseLayer, bool isEditor) {
 
 	m_pNameLevelLabel = cocos2d::CCLabelBMFont::create(Utils::getplayLayerA()->m_level->levelName.c_str(), "goldFont.fnt");
 	m_pNameLevelLabel->limitLabelWidth(150.f, 1.f, 0.1f);
-	m_pNameLevelLabel->setPosition({ 160.f, Utils::winSize().height - 30.f });
+	m_pNameLevelLabel->setAnchorPoint({ 0.f, 0.5f });
+	m_pNameLevelLabel->setPosition({ 86.f, Utils::winSize().height - 30.f });
 	this->addChild(m_pNameLevelLabel);
 
 	auto getNameLevelType = [](gd::GJLevelType type) {
 		switch (type)
 		{
 		case gd::kGJLevelTypeEditor: {
-				return "Editor Level";
-			}
+			return "Editor Level";
+		}
 		case gd::kGJLevelTypeLocal: {
 			return "Official Level";
 		}
@@ -177,6 +178,25 @@ bool BetterPause::init(gd::PauseLayer* pauseLayer, bool isEditor) {
 	cocos2d::ccColor3B green_Color = { 0, 255, 0 };
 	cocos2d::ccColor3B bluesky_Color = { 0, 255, 255 };
 
+
+
+	m_pNormalBarPerB = BarBetterShow::create(green_Color, !Utils::getplayLayerA()->m_isPracticeMode, !Utils::getplayLayerA()->m_isPracticeMode, Utils::getPercentageNowFix(), Utils::getplayLayerA()->m_level->normalPercent);
+	m_pNormalBarPerB->setPosition({ 86.f, Utils::winSize().height - 90.f });
+	m_pNormalBarPerB->setScale(0.5f);
+	m_pNormalBarPerB->m_pBarBase->setVisible(true);
+	m_pNormalBarPerB->m_pBarBase->setOpacity(Utils::convertOpacitySimplf(0.2f));
+	this->addChild(m_pNormalBarPerB);
+
+	m_pPracticeBarPerB = BarBetterShow::create(bluesky_Color, Utils::getplayLayerA()->m_isPracticeMode, Utils::getplayLayerA()->m_isPracticeMode, Utils::getPercentageNowFix(), Utils::getplayLayerA()->m_level->practicePercent);
+	m_pPracticeBarPerB->setPosition({ 86.f, Utils::winSize().height - 125.f });
+	m_pPracticeBarPerB->setScale(0.5f);
+	m_pPracticeBarPerB->m_pBarBase->setVisible(true);
+	m_pPracticeBarPerB->m_pBarBase->setOpacity(Utils::convertOpacitySimplf(0.2f));
+	this->addChild(m_pPracticeBarPerB);
+
+	m_pMenuButtonsConfig = cocos2d::CCMenu::create();
+	this->addChild(m_pMenuButtonsConfig);
+
 	m_pTypeLevelLabel = cocos2d::CCLabelBMFont::create(getNameLevelType(Utils::getplayLayerA()->m_level->levelType), "bigFont.fnt");
 	m_pTypeLevelLabel->setScale(0.3f);
 	m_pTypeLevelLabel->setPosition({ 86.f, Utils::winSize().height - 45.f });
@@ -186,17 +206,18 @@ bool BetterPause::init(gd::PauseLayer* pauseLayer, bool isEditor) {
 	m_pStatusLevelLabel = cocos2d::CCLabelBMFont::create(Utils::getplayLayerA()->m_isPracticeMode ? "Practice Mode" : "Normal Mode", "bigFont.fnt");
 	m_pStatusLevelLabel->setScale(0.3f);
 	m_pStatusLevelLabel->setColor(Utils::getplayLayerA()->m_isPracticeMode ? bluesky_Color : green_Color);
-	m_pStatusLevelLabel->setPosition({ m_pTypeLevelLabel->boundingBox().getMaxX() + 30.f, Utils::winSize().height - 45.f });
-	m_pStatusLevelLabel->setAnchorPoint({ 0.f, 1.f });
+	m_pStatusLevelLabel->setPosition({ 86.f + m_pNormalBarPerB->m_pBarBase->getScaledContentSize().width / 2, Utils::winSize().height - 45.f });
+	m_pStatusLevelLabel->setAnchorPoint({ 1.f, 1.f });
 	this->addChild(m_pStatusLevelLabel);
 
 	auto attemptColorD = Utils::getplayLayerA()->m_isPracticeMode ? "Attempt: <cj>%i</c>" : "Attempt: <cg>%i</c>";
 	auto timeColorD = Utils::getplayLayerA()->m_isPracticeMode ? "Time: <cj>%02d:%02d</c>" : "Time: <cg>%02d:%02d</c>";
 
-	m_pAttemptCurrentLevelLabel = gd::TextArea::create("bigFont.fnt", false, 
+	m_pAttemptCurrentLevelLabel = gd::TextArea::create("bigFont.fnt", false,
 		std::string(cocos2d::CCString::createWithFormat(attemptColorD, Utils::getplayLayerA()->m_currentAttempt)->getCString()),
 		0.3f, 100.f, 100.f, { 0.f, 1.f });
-	m_pAttemptCurrentLevelLabel->setPosition({ 186.f, Utils::winSize().height - 60.f });
+	m_pAttemptCurrentLevelLabel->setPosition({ 86.f, Utils::winSize().height - 60.f });
+	m_pAttemptCurrentLevelLabel->setAnchorPoint({ 0.f, 1.f });
 	this->addChild(m_pAttemptCurrentLevelLabel);
 
 	int totalSeconds = std::floor(Utils::getplayLayerA()->m_totalTime);
@@ -204,50 +225,43 @@ bool BetterPause::init(gd::PauseLayer* pauseLayer, bool isEditor) {
 	int minutes = totalSeconds / 60;
 	int seconds = totalSeconds % 60;
 
+
 	m_pTimeCurrentLevelLabel = gd::TextArea::create("bigFont.fnt", false,
 		std::string(cocos2d::CCString::createWithFormat(timeColorD, minutes, seconds)->getCString()),
-		0.3f, 100.f, 100.f, { 0.f, 1.f });
-	m_pTimeCurrentLevelLabel->setPosition({ 286.f, Utils::winSize().height - 60.f });
+		0.3f, 100.f, 100.f, { 1.f, 1.f });
+	m_pTimeCurrentLevelLabel->setPosition({ 86.f + m_pNormalBarPerB->m_pBarBase->getScaledContentSize().width / 2,
+		Utils::winSize().height - 60.f });
+
+	m_pTimeCurrentLevelLabel->setAnchorPoint({ 1.f, 1.f });
+
 	this->addChild(m_pTimeCurrentLevelLabel);
 
-	m_pNormalBarPerB = BarBetterShow::create(green_Color, !Utils::getplayLayerA()->m_isPracticeMode, !Utils::getplayLayerA()->m_isPracticeMode, Utils::getPercentageNowFix(), Utils::getplayLayerA()->m_level->normalPercent);
-	m_pNormalBarPerB->setPosition({ 86.f, Utils::winSize().height - 80.f });
-	m_pNormalBarPerB->setScale(0.5f);
-	this->addChild(m_pNormalBarPerB);
 
-	m_pPracticeBarPerB = BarBetterShow::create(bluesky_Color, Utils::getplayLayerA()->m_isPracticeMode, Utils::getplayLayerA()->m_isPracticeMode, Utils::getPercentageNowFix(), Utils::getplayLayerA()->m_level->practicePercent);
-	m_pPracticeBarPerB->setPosition({ 86.f, Utils::winSize().height - 115.f });
-	m_pPracticeBarPerB->setScale(0.5f);
-	this->addChild(m_pPracticeBarPerB);
-
-	m_pMenuButtonsConfig = cocos2d::CCMenu::create();
-	this->addChild(m_pMenuButtonsConfig);
-
-	this->createToggleButton((cocos2d::SEL_MenuHandler)&BetterPause::onShowCursorInGame, Utils::shareManager()->getGameVariable("0024"), m_pMenuButtonsConfig, "Show Cursor In-Game", {250.f, 30.f});
-	this->createToggleButton((cocos2d::SEL_MenuHandler)&BetterPause::onDisableShakeEffects, Utils::shareManager()->getGameVariable("0081"), m_pMenuButtonsConfig, "Disable Shake Effects", { 250.f, 55.f });
-	this->createToggleButton((cocos2d::SEL_MenuHandler)&BetterPause::onProgressBarPercentageA, Utils::shareManager()->getGameVariable("0040"), m_pMenuButtonsConfig, "Progress %", { 250.f, 80.f });
-	this->createToggleButton((cocos2d::SEL_MenuHandler)&BetterPause::onProgressBarA, Utils::shareManager()->m_bShowProgressBar, m_pMenuButtonsConfig, "Progress Bar", { 250.f, 105.f });
-	this->createToggleButton((cocos2d::SEL_MenuHandler)&BetterPause::onAutoCheckpointsA, Utils::shareManager()->getGameVariable("0027"), m_pMenuButtonsConfig, "Auto-Checkpoints", { 250.f, 130.f });
-	this->createToggleButton((cocos2d::SEL_MenuHandler)&BetterPause::onAutoRetryA, Utils::shareManager()->getGameVariable("0026"), m_pMenuButtonsConfig, "Auto-Retry", { 250.f, 155.f });
+	this->createToggleButton((cocos2d::SEL_MenuHandler)&BetterPause::onShowCursorInGame, Utils::shareManager()->getGameVariable("0024"), m_pMenuButtonsConfig, "Show Cursor In-Game", { 250.f, 30.f });
+	this->createToggleButton((cocos2d::SEL_MenuHandler)&BetterPause::onDisableShakeEffects, Utils::shareManager()->getGameVariable("0081"), m_pMenuButtonsConfig, "Disable Shake Effects", { 250.f, 50.f });
+	this->createToggleButton((cocos2d::SEL_MenuHandler)&BetterPause::onProgressBarPercentageA, Utils::shareManager()->getGameVariable("0040"), m_pMenuButtonsConfig, "Progress %", { 250.f, 70.f });
+	this->createToggleButton((cocos2d::SEL_MenuHandler)&BetterPause::onProgressBarA, Utils::shareManager()->m_bShowProgressBar, m_pMenuButtonsConfig, "Progress Bar", { 250.f, 90.f });
+	this->createToggleButton((cocos2d::SEL_MenuHandler)&BetterPause::onAutoCheckpointsA, Utils::shareManager()->getGameVariable("0027"), m_pMenuButtonsConfig, "Auto-Checkpoints", { 250.f, 110.f });
+	this->createToggleButton((cocos2d::SEL_MenuHandler)&BetterPause::onAutoRetryA, Utils::shareManager()->getGameVariable("0026"), m_pMenuButtonsConfig, "Auto-Retry", { 250.f, 130.f });
 
 	this->m_pQuickSettingsLabel = cocos2d::CCLabelBMFont::create("Quick Settings", "goldFont.fnt");
 	this->m_pQuickSettingsLabel->setScale(0.6f);
-	this->m_pQuickSettingsLabel->setPosition({ 165.f, 178.f });
+	this->m_pQuickSettingsLabel->setPosition({ 165.f, 158.f });
 	this->addChild(this->m_pQuickSettingsLabel);
 
-	this->m_pVolumenSettingsLabel = cocos2d::CCLabelBMFont::create("Volumen Settings:", "bigFont.fnt");
+	this->m_pVolumenSettingsLabel = cocos2d::CCLabelBMFont::create("Volume Settings:", "bigFont.fnt");
 	this->m_pVolumenSettingsLabel->setScale(0.5f);
 	this->m_pVolumenSettingsLabel->setPosition({ this->m_pSliderMusic->getPositionX() + 5.f, this->m_pSliderMusic->getPositionY() + 60.f });
 	this->addChild(this->m_pVolumenSettingsLabel);
 
 	this->m_pVolumenMusicSettingsLabel = cocos2d::CCLabelBMFont::create("Music", "bigFont.fnt");
 	this->m_pVolumenMusicSettingsLabel->setScale(0.4f);
-	this->m_pVolumenMusicSettingsLabel->setPosition({ this->m_pSliderMusic->getPositionX() - 109.f, this->m_pSliderMusic->getPositionY() + 33.f });
+	this->m_pVolumenMusicSettingsLabel->setPosition({ this->m_pSliderMusic->getPositionX() - 115.f, this->m_pSliderMusic->getPositionY() + 33.f });
 	this->addChild(this->m_pVolumenMusicSettingsLabel);
 
 	this->m_pVolumenSFXSettingsLabel = cocos2d::CCLabelBMFont::create("SFX", "bigFont.fnt");
 	this->m_pVolumenSFXSettingsLabel->setScale(0.4f);
-	this->m_pVolumenSFXSettingsLabel->setPosition({ this->m_pSliderSFX->getPositionX() - 104.f, this->m_pSliderSFX->getPositionY() + 33.f });
+	this->m_pVolumenSFXSettingsLabel->setPosition({ this->m_pSliderSFX->getPositionX() - 110.f, this->m_pSliderSFX->getPositionY() + 33.f });
 	this->addChild(this->m_pVolumenSFXSettingsLabel);
 
 	this->m_pQuestsLabel = cocos2d::CCLabelBMFont::create("Quest:", "bigFont.fnt");
@@ -325,13 +339,13 @@ void BetterPause::onHide(cocos2d::CCObject* pSender) {
 	reinterpret_cast<cocos2d::CCSprite*>(m_pVisibleButton->getChildren()->objectAtIndex(0))->initWithFile(this->m_pIsHide ? "BE_eye-off-btn.png" : "BE_eye-on-btn.png");
 	m_pVisibleButton->setVisible(true);
 	m_pVisibleButton->setOpacity(this->m_pIsHide ? 50 : 255);
-	
+
 }
 
 void BetterPause::createToggleButton(cocos2d::SEL_MenuHandler callback, bool on,
 	cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint pos) {
 
-	auto toggleButton = gd::CCMenuItemToggler::createWithStandardSprites(this, callback, 0.6f);
+	auto toggleButton = gd::CCMenuItemToggler::createWithStandardSprites(this, callback, 0.5f);
 	toggleButton->toggle(on);
 	toggleButton->setPosition(menu->convertToNodeSpace(pos));
 	if (menu) {
@@ -339,7 +353,7 @@ void BetterPause::createToggleButton(cocos2d::SEL_MenuHandler callback, bool on,
 	}
 
 	auto text = cocos2d::CCLabelBMFont::create(caption.c_str(), "bigFont.fnt");
-	text->limitLabelWidth(150.f, 0.35f, 0.1f);
+	text->limitLabelWidth(150.f, 0.3f, 0.1f);
 	text->setAlignment(cocos2d::kCCTextAlignmentRight);
 	text->setPosition(pos);
 	text->setPositionX(pos.x - 15.f);
@@ -404,9 +418,9 @@ bool BarBetterShow::init(cocos2d::ccColor3B color, bool enabledSecondBar, bool s
 	float rightPosXBestPer = 1.f + m_pBarBase->getContentSize().width * min(max(bestCurrent / 100.f, 0.f), 100.f);
 
 	m_pPercentageCurrent = cocos2d::CCLabelBMFont::create(
-	cocos2d::CCString::createWithFormat("%i%%", static_cast<int>(perCurrent))->getCString(), "bigFont.fnt");
+		cocos2d::CCString::createWithFormat("%i%%", static_cast<int>(perCurrent))->getCString(), "bigFont.fnt");
 	m_pPercentageCurrent->setScale(0.7f);
-	m_pPercentageCurrent->setPosition({ rightPosXCurrentPer, -25.f});
+	m_pPercentageCurrent->setPosition({ rightPosXCurrentPer, -25.f });
 	m_pPercentageCurrent->setVisible(showCurrentPer);
 	this->addChild(m_pPercentageCurrent);
 
@@ -497,7 +511,7 @@ void BetterPause::onAutoRetryA(cocos2d::CCObject* pSender) {
 }
 
 void BetterPause::onAutoCheckpointsA(cocos2d::CCObject* pSender) {
-	this->pauseLayer->onAutoRetry(pSender);
+	this->pauseLayer->onAutoCheckpoints(pSender);
 }
 
 void BetterPause::updatePercentageObjects() {
