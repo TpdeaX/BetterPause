@@ -17,7 +17,7 @@ gd::TextArea* createHH(void* font, void* e, float scale, float width, float heig
 
 DWORD WINAPI threadFunc(void* hModule) {
 
-    matdash::create_console();
+   // matdash::create_console();
 
     matdash::add_hook<&PauseLayerHook::createHook, matdash::Thiscall>(gd::base + 0x1E4570);
     matdash::add_hook<&PauseLayerHook::customSetupHook, matdash::Thiscall>(gd::base + 0x1E4620);
