@@ -132,24 +132,38 @@ bool BetterPause::init(gd::PauseLayer* pauseLayer, bool isEditor) {
 	m_pSliderSFX->setPosition({ Utils::winSize().width - 155.f, Utils::winSize().height - 120.f });
 	this->addChild(m_pSliderSFX);
 
+	m_pMenuButtonsVolSet = cocos2d::CCMenu::create();
+	m_pMenuButtonsVolSet->setPosition({ 0.f, 0.f });
+	this->addChild(m_pMenuButtonsVolSet);
+
 	m_pLabelMusicVPercentage = cocos2d::CCLabelBMFont::create("0%", "goldFont.fnt");
 	this->m_pLabelMusicVPercentage->setString(
 		cocos2d::CCString::createWithFormat("%i%%", static_cast<int>(this->m_pSliderMusic->getValue() * 100))->getCString()
 	);
-	m_pLabelMusicVPercentage->setPosition({ this->m_pSliderMusic->getPositionX() + 95.f, this->m_pSliderMusic->getPositionY() + 33.f });
+	//m_pLabelMusicVPercentage->setPosition({ this->m_pSliderMusic->getPositionX() + 95.f, this->m_pSliderMusic->getPositionY() + 33.f });
+	//this->addChild(m_pLabelMusicVPercentage);
+
+	auto m_pBtnMusicVPercentage = gd::CCMenuItemSpriteExtra::create(m_pLabelMusicVPercentage, this, (cocos2d::SEL_MenuHandler)&BetterPause::onSetValueMusic);
+	m_pBtnMusicVPercentage->setPosition({ this->m_pSliderMusic->getPositionX() + 95.f, this->m_pSliderMusic->getPositionY() + 33.f });
 	m_pLabelMusicVPercentage->setScale(0.6f);
 	m_pLabelMusicVPercentage->setAnchorPoint({ 0.f, 0.5f });
-	this->addChild(m_pLabelMusicVPercentage);
+	m_pMenuButtonsVolSet->addChild(m_pBtnMusicVPercentage);
+
 
 	m_pLabelSFXVPercentage = cocos2d::CCLabelBMFont::create("0%", "goldFont.fnt");
 	this->m_pLabelSFXVPercentage->setString(
 		cocos2d::CCString::createWithFormat("%i%%", static_cast<int>(this->m_pSliderSFX->getValue() * 100))->getCString()
 	);
-	m_pLabelSFXVPercentage->setPosition({ this->m_pSliderSFX->getPositionX() + 95.f, this->m_pSliderSFX->getPositionY() + 33.f });
+	//m_pLabelSFXVPercentage->setPosition({ this->m_pSliderSFX->getPositionX() + 95.f, this->m_pSliderSFX->getPositionY() + 33.f });
+	//m_pLabelSFXVPercentage->setScale(0.6f);
+	//m_pLabelSFXVPercentage->setAnchorPoint({ 0.f, 0.5f });
+	//this->addChild(m_pLabelSFXVPercentage);
 
+	auto m_pBtnSFXVPercentage = gd::CCMenuItemSpriteExtra::create(m_pLabelSFXVPercentage, this, (cocos2d::SEL_MenuHandler)&BetterPause::onSetValueSFX);
+	m_pBtnSFXVPercentage->setPosition({ this->m_pSliderSFX->getPositionX() + 95.f, this->m_pSliderSFX->getPositionY() + 33.f });
 	m_pLabelSFXVPercentage->setScale(0.6f);
 	m_pLabelSFXVPercentage->setAnchorPoint({ 0.f, 0.5f });
-	this->addChild(m_pLabelSFXVPercentage);
+	m_pMenuButtonsVolSet->addChild(m_pBtnSFXVPercentage);
 
 	m_pNameLevelLabel = cocos2d::CCLabelBMFont::create(Utils::getplayLayerA()->m_level->levelName.c_str(), "goldFont.fnt");
 	m_pNameLevelLabel->limitLabelWidth(150.f, 1.f, 0.1f);
@@ -289,6 +303,14 @@ bool BetterPause::init(gd::PauseLayer* pauseLayer, bool isEditor) {
 
 
 	return true;
+}
+
+void BetterPause::onSetValueMusic(cocos2d::CCObject* pSender) {
+	SetVolumenPopup::create(this->m_pSliderMusic)->show();
+}
+
+void BetterPause::onSetValueSFX(cocos2d::CCObject* pSender) {
+	SetVolumenPopup::create(this->m_pSliderSFX)->show();
 }
 
 void BetterPause::onOptionsLayer(cocos2d::CCObject* pSender) {
@@ -549,4 +571,134 @@ void BetterPause::onDisableShakeEffects(cocos2d::CCObject* pSender) {
 
 void BetterPause::onShowCursorInGame(cocos2d::CCObject* pSender) {
 	Utils::shareManager()->setGameVariable("0024", !Utils::shareManager()->getGameVariable("0024"));
+}
+
+SetVolumenPopup* SetVolumenPopup::create(gd::Slider* m_pSliderRef) {
+	auto node = new SetVolumenPopup();
+	if (node && node->init(m_pSliderRef)) {
+		node->autorelease();
+	}
+	else {
+		CC_SAFE_DELETE(node);
+	}
+	return node;
+}
+
+void SetVolumenPopup::onSet(cocos2d::CCObject* pSender) {
+	int numberAs = 0;
+	try {
+		numberAs = std::stoi(this->m_pInputTextValue->getString());
+	}
+	catch (std::exception const& e) {
+		numberAs = this->m_pSliderRef->getValue() * 100;
+		gd::FLAlertLayer::create(nullptr, "Error", "OK", nullptr, "There was an error processing the number.")->show();
+	}
+	numberAs = min(100, max(0, numberAs));
+	this->m_pSliderRef->setValue(static_cast<float>(numberAs) / 100.f);
+	this->m_pSliderRef->m_pTouchLogic->getThumb()->activate();
+	this->m_pSliderRef->updateBar();
+	this->keyBackClicked();
+}
+
+void SetVolumenPopup::keyBackClicked() {
+	gd::FLAlertLayer::keyBackClicked();
+}
+
+
+bool SetVolumenPopup::init(gd::Slider* m_pSliderRef) {
+	if (!initWithColor({ 0, 0, 0, 105 })) return false;
+
+	this->m_pSliderRef = m_pSliderRef;
+
+	m_pLayer = cocos2d::CCLayer::create();
+	m_pLayer->setPosition({ Utils::winSize().width / 2.f, Utils::winSize().height / 2.f });
+	m_pLayer->setAnchorPoint({ 0.f, 0.f });
+	this->addChild(m_pLayer);
+
+	auto background = cocos2d::extension::CCScale9Sprite::create("GJ_square02.png");
+	background->setContentSize({ 200.f, 100.f });
+	m_pLayer->addChild(background);
+
+	m_pButtonMenu = cocos2d::CCMenu::create();
+	m_pButtonMenu->setPosition({ -98.f, 50.f });
+	auto imageClose = cocos2d::CCSprite::createWithSpriteFrameName("GJ_closeBtn_001.png");
+	imageClose->setScale(0.7f);
+	auto buttonExtraItem = gd::CCMenuItemSpriteExtra::create(imageClose, this, (cocos2d::SEL_MenuHandler)&SetVolumenPopup::onClose);
+	m_pButtonMenu->addChild(buttonExtraItem);
+	m_pLayer->addChild(m_pButtonMenu);
+
+	auto titleLayer = cocos2d::CCLabelBMFont::create("- Set Value -", "goldFont.fnt");
+	titleLayer->setScale(0.7f);
+	titleLayer->setPositionY(35.f);
+	m_pLayer->addChild(titleLayer);
+
+	auto underline = cocos2d::CCSprite::createWithSpriteFrameName("floorLine_001.png");
+	underline->setPosition({ 0.f, 18.f });
+	underline->setScaleX(0.4f);
+	underline->setScaleY(0.5f);
+	underline->setOpacity(100);
+	m_pLayer->addChild(underline);
+
+	m_pButtonsMenu = cocos2d::CCMenu::create();
+	m_pButtonsMenu->setPosition({ 0.f, 0.f });
+	m_pLayer->addChild(m_pButtonsMenu, 1);
+
+	auto buttonSetValue = gd::ButtonSprite::create("Set", 0xFC, false, "goldFont.fnt", "GJ_button_01.png", 30.f, 0.6f);
+	m_pSetValueBtn = gd::CCMenuItemSpriteExtra::create(buttonSetValue, this, (cocos2d::SEL_MenuHandler)&SetVolumenPopup::onSet);
+	m_pSetValueBtn->setPosition({ 48.f, -15.f });
+	m_pButtonsMenu->addChild(m_pSetValueBtn);
+
+	m_pBGInputTextValue = cocos2d::extension::CCScale9Sprite::create("square02_small.png");
+	m_pBGInputTextValue->setContentSize({ 70.f, 30.f });
+	m_pBGInputTextValue->setScale(1.f);
+	m_pBGInputTextValue->setPosition({ -40.f, -14.f });
+	m_pBGInputTextValue->setColor({ 255, 255, 255 });
+	m_pBGInputTextValue->setOpacity(100);
+	m_pLayer->addChild(m_pBGInputTextValue);
+
+	m_pInputTextValue = gd::CCTextInputNode::create("Vol", this, "bigFont.fnt", 50.f, 20.f);
+	m_pInputTextValue->setString(std::to_string(static_cast<int>(this->m_pSliderRef->getValue() * 100)));
+	m_pInputTextValue->setLabelPlaceholderColor({ 0x75, 0xAA, 0xF0 });
+	m_pInputTextValue->setMaxLabelLength(3);
+	m_pInputTextValue->setAllowedChars("0123456789");
+	m_pInputTextValue->setMaxLabelScale(0.7f);
+	m_pInputTextValue->setPosition({ -41.f, -14.f });
+	m_pInputTextValue->setDelegate(this);
+	m_pLayer->addChild(m_pInputTextValue);
+
+	auto perSymbol = cocos2d::CCLabelBMFont::create("%", "bigFont.fnt");
+	perSymbol->setScale(0.6f);
+	perSymbol->setPosition({ 9.f, -15.f });
+	m_pLayer->addChild(perSymbol);
+
+	this->setKeypadEnabled(true);
+	this->setTouchEnabled(true);
+	this->setKeyboardEnabled(true);
+	this->setMouseEnabled(true);
+	this->registerWithTouchDispatcher();
+	Utils::shareDirectorA()->getTouchDispatcher()->setForcePrio(true);
+	Utils::shareDirectorA()->getTouchDispatcher()->incrementForcePrio(2);
+	this->setTouchPriority(3);
+
+
+
+	return true;
+}
+
+void SetVolumenPopup::keyDown(cocos2d::enumKeyCodes key) {
+	switch (key) {
+	case cocos2d::enumKeyCodes::KEY_Space:
+		break;
+	case cocos2d::enumKeyCodes::CONTROLLER_X:
+		this->keyBackClicked();
+		break;
+	case cocos2d::enumKeyCodes::KEY_Left:
+	case cocos2d::enumKeyCodes::CONTROLLER_Left:
+		break;
+	case cocos2d::enumKeyCodes::KEY_Right:
+	case cocos2d::enumKeyCodes::CONTROLLER_Right:
+		break;
+	default:
+		CCLayer::keyDown(key);
+	}
 }

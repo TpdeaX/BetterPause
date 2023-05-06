@@ -47,6 +47,7 @@ public:
 	cocos2d::CCLabelBMFont* m_pVolumenSFXSettingsLabel = nullptr;
 	cocos2d::CCLabelBMFont* m_pQuestsLabel = nullptr;
 	//cocos2d::CCMenu* m_MenuSliders = nullptr;//why?????!!!
+	cocos2d::CCMenu* m_pMenuButtonsVolSet = nullptr;
 
 	static BetterPause* create(gd::PauseLayer* pauseLayer, bool isEditor);
 	bool init(gd::PauseLayer* pauseLayer, bool isEditor);
@@ -63,6 +64,27 @@ public:
 	void onDisableShakeEffects(cocos2d::CCObject* pSender);
 	void onShowCursorInGame(cocos2d::CCObject* pSender);
 	void updatePercentageObjects();
+	void onSetValueMusic(cocos2d::CCObject* pSender);
+	void onSetValueSFX(cocos2d::CCObject* pSender);
+};
+
+
+class SetVolumenPopup : public gd::FLAlertLayer, public cocos2d::CCTextFieldDelegate, public gd::FLAlertLayerProtocol, public gd::TextInputDelegate
+{
+public:
+
+	cocos2d::CCMenu* m_pButtonsMenu = nullptr;
+	gd::CCMenuItemSpriteExtra* m_pSetValueBtn = nullptr;
+	cocos2d::extension::CCScale9Sprite* m_pBGInputTextValue = nullptr;
+	gd::CCTextInputNode* m_pInputTextValue = nullptr;
+	gd::Slider* m_pSliderRef = nullptr;
+	BetterPause* m_pBetterPauseRef = nullptr;
+
+	static SetVolumenPopup* create(gd::Slider* ref);
+	virtual void keyBackClicked();
+	virtual bool init(gd::Slider* ref);
+	void keyDown(cocos2d::enumKeyCodes key);
+	void onSet(cocos2d::CCObject* pSender);
 };
 
 
