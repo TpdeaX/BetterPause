@@ -23,6 +23,11 @@ public:
 class BetterPause : public cocos2d::CCLayer {
 public:
 	static bool isNotRegister;
+	static cocos2d::CCMenu* pauseLayer_MenuToggles;
+	static cocos2d::CCPoint pauseLayer_lastPoint;
+	static std::vector<std::string> quickSettings_Name;
+	static std::vector<std::string> quickSettings_Desc;
+	static std::vector<std::string> quickSettings_Key;
 	cocos2d::CCMenu* m_pMenuButtons = nullptr;
 	cocos2d::CCMenu* m_pMenuButtons2 = nullptr;
 	gd::PauseLayer* pauseLayer = nullptr;
@@ -48,11 +53,18 @@ public:
 	cocos2d::CCLabelBMFont* m_pQuestsLabel = nullptr;
 	//cocos2d::CCMenu* m_MenuSliders = nullptr;//why?????!!!
 	cocos2d::CCMenu* m_pMenuButtonsVolSet = nullptr;
+	gd::CCMenuItemSpriteExtra* m_pBtnMusicVPercentage = nullptr;
+	gd::CCMenuItemSpriteExtra* m_pBtnSFXVPercentage = nullptr;
+	gd::TextArea* m_pDownloadMusicLabel = nullptr;
+	bool m_pIsTextureEye = true;
+	gd::CustomSongWidget* m_pCustomSongWidget = nullptr;
+	gd::CCMenuItemSpriteExtra* m_pButtonQuestAlt = nullptr;
 
-	static BetterPause* create(gd::PauseLayer* pauseLayer, bool isEditor);
-	bool init(gd::PauseLayer* pauseLayer, bool isEditor);
+	static BetterPause* create(gd::PauseLayer* pauseLayer, bool isEditor, bool notBetter);
+	bool init(gd::PauseLayer* pauseLayer, bool isEditor, bool notBetter);
 	void createToggleButton(cocos2d::SEL_MenuHandler callback, bool on,
-		cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint pos);
+		cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint pos, float size,
+		bool twoColumns);
 	void onOptionsLayer(cocos2d::CCObject* pSender);
 	void onHide(cocos2d::CCObject* pSender);
 	void musicSliderChanged(cocos2d::CCObject* pSender);
@@ -66,6 +78,10 @@ public:
 	void updatePercentageObjects();
 	void onSetValueMusic(cocos2d::CCObject* pSender);
 	void onSetValueSFX(cocos2d::CCObject* pSender);
+	void onOpenChallenges(cocos2d::CCObject* pSender);
+	void onInfoLevelOpen(cocos2d::CCObject* pSender);
+	void createToggleButtonWithGameVariable(const char* key, cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint pos, float size, bool twoColumns);
+	void onToggleWithGameVariable(cocos2d::CCObject* pSender);
 };
 
 
@@ -85,6 +101,134 @@ public:
 	virtual bool init(gd::Slider* ref);
 	void keyDown(cocos2d::enumKeyCodes key);
 	void onSet(cocos2d::CCObject* pSender);
+};
+
+class MoreOptionsPauseLayer : public gd::FLAlertLayer, public cocos2d::CCTextFieldDelegate, public gd::FLAlertLayerProtocol
+{
+public:
+	static MoreOptionsPauseLayer* create();
+	virtual void keyBackClicked();
+	virtual bool init();
+	void onClose(CCObject* pSender);
+	void onOptionsGame(CCObject* pSender);
+	void onOptionsPause(CCObject* pSender);
+	void keyDown(cocos2d::enumKeyCodes key);
+
+	cocos2d::extension::CCScale9Sprite* m_pBG = nullptr;
+	cocos2d::extension::CCScale9Sprite* m_pBGOptions = nullptr;
+	cocos2d::CCSprite* m_pUnderLine = nullptr;
+	cocos2d::CCLabelBMFont* m_pTitleLayer = nullptr;
+	cocos2d::CCMenu* m_menuButtons = nullptr;
+
+};
+
+struct ListData {
+	const char* m_sTitle;
+	std::vector<std::string> m_vEntries;
+	unsigned int m_uMaxLength;
+	unsigned int m_uLength;
+	unsigned int m_uOffset;
+	unsigned int m_uIndex;
+
+	ListData(const char* title, unsigned int length);
+	ListData() { /*doesn't matter since only used in default ctor of LoaderManager*/ };
+};
+
+
+class PauseSettingsLayer : public gd::GJDropDownLayer
+{
+public:
+	friend class HorizontalList;
+
+	HorizontalList* m_pSwitchPause = nullptr;
+	HorizontalList* m_pSwitchQuest = nullptr;
+	HorizontalList* m_pSwitchButtonsPos = nullptr;
+	cocos2d::CCMenu* m_menuButtons = nullptr;
+
+	static PauseSettingsLayer* create();
+	virtual void customSetup();
+	virtual void exitLayer(cocos2d::CCObject*);
+	void onSelectQuickSettings(cocos2d::CCObject*);
+};
+
+enum {
+	kListUpBtn,
+	kListDownBtn,
+	kVerticalListSwapUpBtn,
+	kVerticalListSwapDownBtn,
+	kVerticalListMoveBtn,
+	kVerticalListBackground
+};
+
+class HorizontalList : public cocos2d::CCNode {
+protected:
+	ListData& m_pData;
+	cocos2d::CCLabelBMFont** m_pLabels = nullptr;
+	cocos2d::CCMenu* m_pMenu = nullptr;
+
+protected:
+	HorizontalList(ListData& data) : m_pData{ data } {}
+	virtual ~HorizontalList() { delete[] m_pLabels; }
+
+	virtual bool init();
+
+	inline void getLength() {
+		m_pData.m_uLength = m_pData.m_vEntries.size() -
+			m_pData.m_uOffset < m_pData.m_uMaxLength ?
+			(m_pData.m_vEntries.size() - m_pData.m_uOffset)
+			: m_pData.m_uMaxLength;
+	}
+	virtual void navigate(cocos2d::CCObject* btn);
+
+public:
+	static HorizontalList* create(ListData& data);
+
+	virtual void updateList();
+	virtual void setPosition(float x, float y);
+};
+
+class SelectQuickSettings : public gd::FLAlertLayer, public cocos2d::CCTextFieldDelegate, public gd::FLAlertLayerProtocol
+{
+public:
+	static SelectQuickSettings* create();
+	virtual void keyBackClicked();
+	virtual bool init();
+	void onClose(CCObject* pSender);
+	void keyDown(cocos2d::enumKeyCodes key);
+	void onToggleWithGameVariable(CCObject* pSender);
+
+	cocos2d::extension::CCScale9Sprite* m_pBG = nullptr;
+	cocos2d::CCSprite* m_pUnderLine = nullptr;
+	cocos2d::CCLabelBMFont* m_pTitleLayer = nullptr;
+	std::vector<gd::CCMenuItemToggler*> m_toggles;
+
+};
+
+
+class GenericListCell : public gd::TableViewCell {
+protected:
+	GenericListCell(const char* name, cocos2d::CCSize size);
+	void draw() override;
+
+public:
+	static GenericListCell* create(const char* key, cocos2d::CCSize size);
+	void updateBGColor(int index);
+};
+
+class ListView : public gd::CustomListView {
+protected:
+	void setupList() override;
+	gd::TableViewCell* getListCell(const char* key) override;
+	void loadCell(gd::TableViewCell* cell, unsigned int index) override;
+	static cocos2d::CCRect calculateNodeCoverage(cocos2d::CCArray* nodes);
+
+public:
+	static ListView* create(
+		cocos2d::CCArray* items,
+		float itemHeight = 30.f,
+		float width = 340.f,
+		float height = 200.f
+	);
 };
 
 
