@@ -104,7 +104,7 @@ public:
 
 	void updateSongInfoHook() {
 		auto scaleSafe = this->getScale();
-		std::cout << scaleSafe << std::endl;
+		//std::cout << scaleSafe << std::endl;
 		if (Utils::getplayLayerA() && Utils::getplayLayerA()->m_bIsPaused) {
 			this->setScale(1.f);
 		}
@@ -124,13 +124,13 @@ bool CurrencyRewardLayer_init(gd::CurrencyRewardLayer* self, void* param_1_00, v
 
 	if(!matdash::orig<&CurrencyRewardLayer_init, matdash::Thiscall>(self, param_1_00, param_1, param_2, param_3, param_4, param_5, param_6, param_7, param_8, param_9, p10))return false;
 	
-	for (size_t i = 0; i < self->getChildrenCount(); i++)
+	/*for (size_t i = 0; i < self->getChildrenCount(); i++)
 	{
 		self->getChildren()->objectAtIndex(i)->setTag(i);
-	}
+	}*/
 
 	auto node = static_cast<cocos2d::CCNode*>(self->getChildren()->objectAtIndex(2));
-	if (node) {
+	if (node && Utils::getplayLayerA() && Utils::getplayLayerA()->m_bIsPaused) {
 		node->setPositionX(node->getPositionX() - 61.f);
 		float desiredY = Utils::winSize().height + 170.f;
 		auto localPosition = node->getParent()->convertToNodeSpace(ccp(0, desiredY));

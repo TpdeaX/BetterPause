@@ -562,7 +562,7 @@ bool BetterPause::init(gd::PauseLayer* pauseLayer, bool isEditor, bool notBetter
 
 	float targetAspectRatio = 4.0f / 3.0f;
 
-	std::cout << fabs(aspectRatio - targetAspectRatio) << std::endl;
+	//std::cout << fabs(aspectRatio - targetAspectRatio) << std::endl;
 
 	if (fabs(aspectRatio - targetAspectRatio) < 0.39) {
 
