@@ -73,7 +73,7 @@ void BetterPauseManager::firstLoad() {
 	m_pSwitchPause.m_uOffset = 0;
 	m_pSwitchQuest.m_vEntries = { "Full", "Button", "Disable" };
 	m_pSwitchQuest.m_uOffset = 0;
-	m_pSwitchButtonsPos.m_vEntries = { "Left", "Rigth" };
+	m_pSwitchButtonsPos.m_vEntries = { "Left", "Right" };
 	m_pSwitchButtonsPos.m_uOffset = 0;
 }
 
