@@ -420,13 +420,19 @@ bool BetterPause::init(gd::PauseLayer* pauseLayer, bool isEditor, bool notBetter
 	{
 		auto posA = sharedStateBP().posQuickA[i];
 		if (posA == -2) {
-			this->createToggleButtonWithGameVariable("0040", m_pMenuButtonsConfig, "Progress %", { xPosRES[i], yPosRES[i] }, 0.25f, true);
+			this->createToggleButton((cocos2d::SEL_MenuHandler)&BetterPause::onProgressBarA, Utils::shareManager()->m_bShowProgressBar, m_pMenuButtonsConfig, "Progress Bar", { xPosRES[i], yPosRES[i] }, 0.25f, true);
 		}
 		else if (posA == -1) {
 			continue;
 		}
 		else if (BetterPause::quickSettings_Name[posA].c_str() != nullptr) {
-			this->createToggleButtonWithGameVariable(BetterPause::quickSettings_Key[posA].c_str(), m_pMenuButtonsConfig, BetterPause::quickSettings_Name[posA].c_str(), { xPosRES[i], yPosRES[i] }, 0.25f, true);
+			if (BetterPause::quickSettings_Key[posA] == "0040") {
+				this->createToggleButton((cocos2d::SEL_MenuHandler)&BetterPause::onProgressBarPercentageA, "0040", m_pMenuButtonsConfig, "Progress %", { xPosRES[i], yPosRES[i] }, 0.25f, true);
+
+			}
+			else {
+				this->createToggleButtonWithGameVariable(BetterPause::quickSettings_Key[posA].c_str(), m_pMenuButtonsConfig, BetterPause::quickSettings_Name[posA].c_str(), { xPosRES[i], yPosRES[i] }, 0.25f, true);
+			}
 		}
 		else {
 			for (size_t j = 0; j < 6; j++)
@@ -449,7 +455,13 @@ bool BetterPause::init(gd::PauseLayer* pauseLayer, bool isEditor, bool notBetter
 				}
 			}
 
-			this->createToggleButtonWithGameVariable(BetterPause::quickSettings_Key[sharedStateBP().posQuickA[i]].c_str(), m_pMenuButtonsConfig, BetterPause::quickSettings_Name[sharedStateBP().posQuickA[i]].c_str(), { xPosRES[i], yPosRES[i] }, 0.25f, true);
+			if (BetterPause::quickSettings_Key[posA] == "0040") {
+				this->createToggleButton((cocos2d::SEL_MenuHandler)&BetterPause::onProgressBarPercentageA, "0040", m_pMenuButtonsConfig, "Progress %", { xPosRES[i], yPosRES[i] }, 0.25f, true);
+
+			}
+			else {
+				this->createToggleButtonWithGameVariable(BetterPause::quickSettings_Key[posA].c_str(), m_pMenuButtonsConfig, BetterPause::quickSettings_Name[posA].c_str(), { xPosRES[i], yPosRES[i] }, 0.25f, true);
+			}
 		}
 	}
 
